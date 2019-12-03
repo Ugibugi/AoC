@@ -18,8 +18,9 @@ public:
         {
             mem.push_back(std::atoi(buff));
         }
+        ip=0;
     }
-    Intcode(const std::vector<int>& prog) : mem(prog){}
+    Intcode(const std::vector<int>& prog) : mem(prog.begin(),prog.end()), ip(0){}
     void reset(const std::vector<int>& prog)
     {
         mem = prog;
@@ -37,7 +38,7 @@ public:
                 ip+=4;
                 break;
             case 2:
-                mem[mem[ip + 3]] = mem[mem[ip + 1]] + mem[mem[ip + 2]];
+                mem[mem[ip + 3]] = mem[mem[ip + 1]] * mem[mem[ip + 2]];
                 ip+=4;
                 break;
             case 99:

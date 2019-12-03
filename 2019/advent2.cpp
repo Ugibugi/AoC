@@ -8,7 +8,7 @@
 
 int main()
 {
-    std::ifstream file("in");
+    std::ifstream file("day2in");
     char buff[255];
     std::vector<int> mem;
     mem.reserve(1000);
