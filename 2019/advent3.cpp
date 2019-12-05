@@ -60,7 +60,7 @@ int dst(const Point& a,const Point& b)
 }
 int main()
 {
-    std::ifstream file("day3in");
+    std::ifstream file("day3in.bigboi");
     std::vector<Line_entry> lines;
     Point cursor;
     Point res = {10000000,10000000};
