@@ -5,6 +5,7 @@
 #include <iostream>
 #include <array>
 #include <cmath>
+#include <sstream>
 
 typedef std::array<int,5> Ins;
 
@@ -13,6 +14,9 @@ class Intcode
 {
 public:
     std::vector<int>mem;
+    std::vector<int> in;
+    int out;
+    bool halted = false;
     int ip=0;
     struct
     {
@@ -31,11 +35,12 @@ public:
         }
         ip=0;
     }
-    Intcode(const std::vector<int>& prog) : mem(prog.begin(),prog.end()), ip(0){}
+    Intcode(const std::vector<int>& prog) : mem(prog), ip(0){}
     void reset(const std::vector<int>& prog)
     {
         mem = prog;
         ip=0;
+        halted = false;
     }
 
     int& at(int addr,int immediate=0)
@@ -62,15 +67,29 @@ public:
             instr.accessMode[i-2] = ret[i];
         }
     }
-    int input(std::istream& is = std::cin)
+    int input(std::istream& def = std::cin)
     {
         int a;
-        is >> a;
+        if(in.empty()) def >> a;
+        else
+        {
+            a = in.back();
+            in.pop_back();
+        }
+        //printf("Put in: %d \n",a);
         return a;
+        
     }
-
-    int run(int retIndex=0)
+    template<typename... Types>
+    int run(Types ...args)
     {
+        if(halted) 
+        {
+            //printf("HALT RETURN\n");
+            return out;
+        }
+        //printf("Running prog\n");
+        (in.push_back(std::forward<Types>(args)), ...);
         while(true)
         {
             parseInstr(); 
@@ -86,14 +105,18 @@ public:
                 break;
             case 99: // HALT
                 ip++;
-                return mem[retIndex];
+                halted = true;
+                //printf("returning %d\n",out);
+                return out;
             case 3: // IN
                 arg(1) = input();
                 ip+=2;
                 break;
             case 4: //OUT
-                std::cout << "OUTPUT: " << arg(1) << '\n';
+                out = arg(1);
                 ip+=2;
+                //printf("output: %d\n",out);
+                return out;
                 break;
             case 5: //J IF TRUE
                 if(arg(1)) ip = arg(2);
