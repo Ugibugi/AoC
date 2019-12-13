@@ -7,15 +7,20 @@
 #include <cmath>
 #include <sstream>
 #include <unordered_map>
+#include <functional>
+#include <list>
 
 typedef std::array<int64_t,5> Ins;
 typedef std::unordered_map<int64_t,int64_t> Prog;
-
+typedef std::function<int64_t()>  InFunc;
+typedef std::function<void(int64_t)> OutFunc;
+auto defInFunc = [](){return 0;};
+auto defOutFunc = [](int a){std::cout << "OUTPUT: " << a <<'\n';};
 class Intcode
 {
 public:
     Prog mem;
-    std::vector<int64_t> in;
+    std::list<int64_t> in;
     int64_t out;
     bool halted = false;
     int64_t ip=0;
@@ -25,8 +30,9 @@ public:
         int64_t opcode;
         std::array<int64_t,3> accessMode; 
     }instr;
-    
-    Intcode(std::string filename)
+    InFunc infun;
+    OutFunc outfun;
+    Intcode(std::string filename,InFunc in=defInFunc,OutFunc out=defOutFunc):infun(in),outfun(out)
     {
         std::ifstream file(filename);
         char buff[255];
@@ -73,10 +79,10 @@ public:
             instr.accessMode[i-2] = ret[i];
         }
     }
-    int64_t input(std::istream& def = std::cin)
+    int64_t input()
     {
         int64_t a;
-        if(in.empty()) def >> a;
+        if(in.empty()) a = infun();
         else
         {
             a = in.back();
@@ -113,7 +119,7 @@ public:
                 ip++;
                 halted = true;
                 //printf("HALT %d\n",out);
-                return out;
+                return 0;
                 break;
             case 3: // IN
                 arg(1) = input();
@@ -122,7 +128,7 @@ public:
             case 4: //OUT
                 out = arg(1);
                 ip+=2;
-                return out;
+                outfun(out);
                 break;
             case 5: //J IF TRUE
                 if(arg(1)) ip = arg(2);
